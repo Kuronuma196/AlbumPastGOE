@@ -1,0 +1,91 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Images, MoreVertical, Edit, Trash2, Share2, Lock, Globe } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+
+export default function AlbumCard({ album, onEdit, onDelete, onShare }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            whileHover={{ y: -4 }}
+            transition={{ duration: 0.2 }}
+        >
+            <Card className="group overflow-hidden bg-white border-0 shadow-sm hover:shadow-xl transition-all duration-300">
+                <Link to={createPageUrl(`AlbumView?id=${album.id}`)}>
+                    <div className="aspect-[4/3] relative overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
+                        {album.cover_url ? (
+                            <img 
+                                src={album.cover_url} 
+                                alt={album.title}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                                <Images className="w-16 h-16 text-slate-300" />
+                            </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        
+                        <div className="absolute top-3 right-3">
+                            <Badge 
+                                variant="secondary" 
+                                className={`${album.is_public ? 'bg-emerald-500/90 text-white' : 'bg-slate-800/80 text-white'} backdrop-blur-sm`}
+                            >
+                                {album.is_public ? <Globe className="w-3 h-3 mr-1" /> : <Lock className="w-3 h-3 mr-1" />}
+                                {album.is_public ? 'Público' : 'Privado'}
+                            </Badge>
+                        </div>
+
+                        <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <p className="text-white/80 text-sm line-clamp-2">{album.description || 'Sem descrição'}</p>
+                        </div>
+                    </div>
+                </Link>
+
+                <div className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-slate-800 truncate">{album.title}</h3>
+                            <p className="text-sm text-slate-500 mt-1">
+                                {album.photo_count || 0} {album.photo_count === 1 ? 'foto' : 'fotos'}
+                            </p>
+                        </div>
+                        
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
+                                    <MoreVertical className="w-4 h-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem onClick={() => onEdit(album)}>
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Editar álbum
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onShare(album)}>
+                                    <Share2 className="w-4 h-4 mr-2" />
+                                    Compartilhar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                    onClick={() => onDelete(album)}
+                                    className="text-red-600 focus:text-red-600"
+                                    disabled={album.photo_count > 0}
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Excluir álbum
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
+            </Card>
+        </motion.div>
+    );
+}

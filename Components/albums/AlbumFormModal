@@ -1,0 +1,122 @@
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Loader2, FolderPlus, Save } from 'lucide-react';
+
+export default function AlbumFormModal({ open, onOpenChange, album, onSave }) {
+    const [formData, setFormData] = useState({
+        title: '',
+        description: ''
+    });
+    const [isLoading, setIsLoading] = useState(false);
+    const [errors, setErrors] = useState({});
+
+    useEffect(() => {
+        if (album) {
+            setFormData({
+                title: album.title || '',
+                description: album.description || ''
+            });
+        } else {
+            setFormData({ title: '', description: '' });
+        }
+        setErrors({});
+    }, [album, open]);
+
+    const validate = () => {
+        const newErrors = {};
+        if (!formData.title.trim()) {
+            newErrors.title = 'O título é obrigatório';
+        } else if (formData.title.length > 100) {
+            newErrors.title = 'O título deve ter no máximo 100 caracteres';
+        }
+        if (formData.description.length > 500) {
+            newErrors.description = 'A descrição deve ter no máximo 500 caracteres';
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!validate()) return;
+
+        setIsLoading(true);
+        await onSave(formData);
+        setIsLoading(false);
+        onOpenChange(false);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <FolderPlus className="w-5 h-5 text-violet-600" />
+                        {album ? 'Editar Álbum' : 'Novo Álbum'}
+                    </DialogTitle>
+                </DialogHeader>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="title">Título *</Label>
+                        <Input
+                            id="title"
+                            value={formData.title}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            placeholder="Nome do álbum"
+                            className={errors.title ? 'border-red-500' : ''}
+                        />
+                        {errors.title && (
+                            <p className="text-sm text-red-500">{errors.title}</p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Descrição</Label>
+                        <Textarea
+                            id="description"
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            placeholder="Descreva seu álbum..."
+                            rows={3}
+                            className={errors.description ? 'border-red-500' : ''}
+                        />
+                        {errors.description && (
+                            <p className="text-sm text-red-500">{errors.description}</p>
+                        )}
+                        <p className="text-xs text-slate-400">
+                            {formData.description.length}/500 caracteres
+                        </p>
+                    </div>
+
+                    <DialogFooter>
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => onOpenChange(false)}
+                            disabled={isLoading}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button 
+                            type="submit" 
+                            disabled={isLoading}
+                            className="bg-violet-600 hover:bg-violet-700"
+                        >
+                            {isLoading ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                                <Save className="w-4 h-4 mr-2" />
+                            )}
+                            {album ? 'Salvar' : 'Criar Álbum'}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}

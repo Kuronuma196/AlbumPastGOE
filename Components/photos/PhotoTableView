@@ -1,0 +1,132 @@
+import React from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical, Edit, Trash2, Eye, ExternalLink } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { motion } from 'framer-motion';
+
+export default function PhotoTableView({ photos, onView, onEdit, onDelete }) {
+    const formatSize = (bytes) => {
+        if (!bytes) return '0 B';
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    return (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+            <Table>
+                <TableHeader>
+                    <TableRow className="bg-slate-50">
+                        <TableHead className="w-20">Foto</TableHead>
+                        <TableHead>Título</TableHead>
+                        <TableHead>Descrição</TableHead>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Tamanho</TableHead>
+                        <TableHead className="w-24">Cor</TableHead>
+                        <TableHead className="w-24">Dimensões</TableHead>
+                        <TableHead className="w-16"></TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {photos.map((photo, index) => (
+                        <motion.tr
+                            key={photo.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            className="group hover:bg-slate-50 cursor-pointer"
+                            onClick={() => onView(photo)}
+                        >
+                            <TableCell>
+                                <div className="w-14 h-14 rounded-lg overflow-hidden bg-slate-100">
+                                    <img 
+                                        src={photo.thumbnail_url || photo.file_url}
+                                        alt={photo.title}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            </TableCell>
+                            <TableCell className="font-medium text-slate-800">
+                                {photo.title || 'Sem título'}
+                            </TableCell>
+                            <TableCell className="text-slate-600 max-w-xs truncate">
+                                {photo.description || '-'}
+                            </TableCell>
+                            <TableCell className="text-slate-600">
+                                {photo.acquisition_date 
+                                    ? format(new Date(photo.acquisition_date), "dd 'de' MMM, yyyy", { locale: ptBR })
+                                    : '-'
+                                }
+                            </TableCell>
+                            <TableCell className="text-slate-600">
+                                {formatSize(photo.file_size)}
+                            </TableCell>
+                            <TableCell>
+                                <div className="flex items-center gap-2">
+                                    <div 
+                                        className="w-6 h-6 rounded-full border border-slate-200"
+                                        style={{ backgroundColor: photo.dominant_color || '#ccc' }}
+                                    />
+                                    <span className="text-xs text-slate-500 font-mono">
+                                        {photo.dominant_color || '-'}
+                                    </span>
+                                </div>
+                            </TableCell>
+                            <TableCell className="text-slate-600 text-sm">
+                                {photo.width && photo.height 
+                                    ? `${photo.width}×${photo.height}`
+                                    : '-'
+                                }
+                            </TableCell>
+                            <TableCell>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
+                                            <MoreVertical className="w-4 h-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={(e) => {
+                                            e.stopPropagation();
+                                            onView(photo);
+                                        }}>
+                                            <Eye className="w-4 h-4 mr-2" />
+                                            Visualizar
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.open(photo.file_url, '_blank');
+                                        }}>
+                                            <ExternalLink className="w-4 h-4 mr-2" />
+                                            Abrir original
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={(e) => {
+                                            e.stopPropagation();
+                                            onEdit(photo);
+                                        }}>
+                                            <Edit className="w-4 h-4 mr-2" />
+                                            Editar
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onDelete(photo);
+                                            }}
+                                            className="text-red-600 focus:text-red-600"
+                                        >
+                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            Excluir
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
+                        </motion.tr>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
+    );
+}

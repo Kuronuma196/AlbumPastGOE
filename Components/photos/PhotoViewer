@@ -1,0 +1,156 @@
+import React from 'react';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { X, ChevronLeft, ChevronRight, Download, Calendar, HardDrive, Palette, Maximize2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { motion, AnimatePresence } from 'framer-motion';
+
+export default function PhotoViewer({ 
+    open, 
+    onOpenChange, 
+    photo, 
+    photos, 
+    onNavigate 
+}) {
+    if (!photo) return null;
+
+    const currentIndex = photos.findIndex(p => p.id === photo.id);
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex < photos.length - 1;
+
+    const formatSize = (bytes) => {
+        if (!bytes) return '0 B';
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    const handleDownload = () => {
+        const link = document.createElement('a');
+        link.href = photo.file_url;
+        link.download = photo.title || 'photo';
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-5xl w-full h-[90vh] p-0 bg-black/95 border-0">
+                {/* Header */}
+                <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/80 to-transparent">
+                    <div className="flex items-center justify-between">
+                        <div className="text-white">
+                            <h3 className="font-semibold">{photo.title || 'Sem título'}</h3>
+                            <p className="text-sm text-white/60">
+                                {currentIndex + 1} de {photos.length}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-white hover:bg-white/20"
+                                onClick={handleDownload}
+                            >
+                                <Download className="w-5 h-5" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-white hover:bg-white/20"
+                                onClick={() => window.open(photo.file_url, '_blank')}
+                            >
+                                <Maximize2 className="w-5 h-5" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-white hover:bg-white/20"
+                                onClick={() => onOpenChange(false)}
+                            >
+                                <X className="w-5 h-5" />
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Image */}
+                <div className="w-full h-full flex items-center justify-center p-4">
+                    <AnimatePresence mode="wait">
+                        <motion.img
+                            key={photo.id}
+                            src={photo.file_url}
+                            alt={photo.title}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className="max-w-full max-h-full object-contain"
+                        />
+                    </AnimatePresence>
+                </div>
+
+                {/* Navigation */}
+                {hasPrev && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-black/50 text-white hover:bg-black/70"
+                        onClick={() => onNavigate(photos[currentIndex - 1])}
+                    >
+                        <ChevronLeft className="w-8 h-8" />
+                    </Button>
+                )}
+                {hasNext && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-black/50 text-white hover:bg-black/70"
+                        onClick={() => onNavigate(photos[currentIndex + 1])}
+                    >
+                        <ChevronRight className="w-8 h-8" />
+                    </Button>
+                )}
+
+                {/* Footer Info */}
+                <div className="absolute bottom-0 left-0 right-0 z-10 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-white/80">
+                        {photo.acquisition_date && (
+                            <span className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                {format(new Date(photo.acquisition_date), "dd 'de' MMMM 'de' yyyy, HH:mm", { locale: ptBR })}
+                            </span>
+                        )}
+                        {photo.file_size && (
+                            <span className="flex items-center gap-1">
+                                <HardDrive className="w-4 h-4" />
+                                {formatSize(photo.file_size)}
+                            </span>
+                        )}
+                        {photo.width && photo.height && (
+                            <span>
+                                {photo.width} × {photo.height} px
+                            </span>
+                        )}
+                        {photo.dominant_color && (
+                            <span className="flex items-center gap-2">
+                                <Palette className="w-4 h-4" />
+                                <div 
+                                    className="w-5 h-5 rounded border border-white/30"
+                                    style={{ backgroundColor: photo.dominant_color }}
+                                />
+                                <span className="font-mono text-xs">{photo.dominant_color}</span>
+                            </span>
+                        )}
+                    </div>
+                    {photo.description && (
+                        <p className="mt-2 text-white/70 text-sm">{photo.description}</p>
+                    )}
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
