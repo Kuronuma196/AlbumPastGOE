@@ -36,3 +36,4 @@ AlbumSchema.statics.updatePhotoCount = async function(albumId: Types.ObjectId) {
 };
 
 export default mongoose.model<IAlbum>('Album', AlbumSchema);
+
